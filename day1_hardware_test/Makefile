@@ -1,8 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-	<key>URL</key>
-	<string>vscode-remote://ssh-remote%2Butm/home/jambaek/advanced-linux-practice/day1/Makefile</string>
-</dict>
-</plist>
+%:%.c
+	$(CC) $< -o $@ -lwiringPi
+
+clean:
+	rm -f led buzzer cds segment
