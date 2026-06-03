@@ -1,6 +1,7 @@
 CC = gcc
 CFLAG = -fPIC -c
 SHARE = -shared -lwiringPi
+OPT = -lwiringPi -ldl -lpthread
 
 LIBLED = libled.so
 LIBBUZZER = libbuzzer.so
@@ -9,7 +10,7 @@ LIBSEG = libseg.so
 LIBTEMP = libtemp.so
 
 
-all: $(LIBLED) $(LIBBUZZER) $(LIBCDS) $(LIBSEG) $(LIBTEMP) test_device
+all: $(LIBLED) $(LIBBUZZER) $(LIBCDS) $(LIBSEG) $(LIBTEMP)	server client
 
 $(LIBLED): led.o
 	$(CC) -o $@ $< $(SHARE)
@@ -34,9 +35,12 @@ $(LIBTEMP): temperature.o
 %.o: %.c
 	$(CC) $(CFLAG) $< -o $@
 
-test_device: test_device.c 
-	$(CC) $< -o $@ -lwiringPi -ldl
-	scp test_device jambaek@100.113.15.114:~/fortest
+server: server.c
+	$(CC) server.c -o $@ $(OPT)
+	scp $@ jambaek@100.113.15.114:~/fortest
+
+client: client.c
+	$(CC) client.c -o $@
 
 clean:
-	rm -f *.o *.so test_device
+	rm -f *.o *.so server client
