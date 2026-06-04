@@ -30,10 +30,10 @@ typedef struct {
 #define SERVER_WORKDIR "/home/jambaek/fortest"
 #define MAX_SIZES       256
 #define EVENT_SIZES     20
-#define SERVER_PORT        60000
+#define SERVER_PORT     60000
 #define BACKLOG         10
 #define TEMP_ADC_SCALE  10.17f
-#define CDS_THRESHOLD 205
+#define CDS_THRESHOLD   205
 
 void daemonize(void)
 {
