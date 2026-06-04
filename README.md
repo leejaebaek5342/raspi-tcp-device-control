@@ -52,7 +52,7 @@ Raspberry Pi 4와 Ubuntu(UTM)를 활용하여 TCP 소켓 통신 기반의 원격
 ## 장치 구성
 | 장치 | 연결 방식 | BCM | wiringPi |
 |------|----------|-----|----------|
-| LED | GPIO | - | 1 |
+| LED | GPIO | BCM 18 | 1 |
 | BUZZER | GPIO | BCM 22 | 3 |
 | SEG_A | GPIO | BCM 23 | 4 |
 | SEG_B | GPIO | BCM 24 | 5 |
