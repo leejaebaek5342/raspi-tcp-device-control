@@ -30,9 +30,10 @@ typedef struct {
 #define SERVER_WORKDIR "/home/jambaek/fortest"
 #define MAX_SIZES       256
 #define EVENT_SIZES     20
-#define FD_PORTS        60000
+#define SERVER_PORT        60000
 #define BACKLOG         10
 #define TEMP_ADC_SCALE  10.17f
+#define CDS_THRESHOLD 205
 
 void daemonize(void)
 {
@@ -217,16 +218,20 @@ void* cds_thread(void* arg)
     int fd = *(int*)arg;
 
     char result[MAX_SIZES];
-    snprintf(result, MAX_SIZES, "조도센서: %d\n", val);
-    send(fd, result, strlen(result), 0);
 
     pthread_t thr;
     char* cmd;
 
-    if (val >= 205)
+    if (val >= CDS_THRESHOLD){
         cmd = strdup("ON");
-    else
+        snprintf(result, MAX_SIZES, "조도센서: %d\n현재 빛이 감지되지 않고 있습니다.\n", val);
+        send(fd, result, strlen(result), 0);
+    }
+    else{
         cmd = strdup("OFF");
+        snprintf(result, MAX_SIZES, "조도센서: %d\n현재 빛이 감지되고 있습니다.", val);
+        send(fd, result, strlen(result), 0);
+    }
 
     if (cmd == NULL) {
         syslog(LOG_ERR, "strdup failed in cds_thread");
@@ -376,7 +381,7 @@ void server_init(server_t* server)
 
     memset(&serveraddr, 0, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
-    serveraddr.sin_port = htons(FD_PORTS);
+    serveraddr.sin_port = htons(SERVER_PORT);
     serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     if (bind(server->sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr)) == -1) {
@@ -406,7 +411,7 @@ void server_init(server_t* server)
         exit(1);
     }
 
-    syslog(LOG_INFO, "server initialized: port=%d", FD_PORTS);
+    syslog(LOG_INFO, "server initialized: port=%d", SERVER_PORT);
 }
 
 void run_server(server_t* server)
