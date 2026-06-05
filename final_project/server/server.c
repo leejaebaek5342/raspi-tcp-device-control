@@ -15,6 +15,8 @@
 #include <sys/stat.h>
 #include <sys/resource.h>
 #include <syslog.h>
+#include <libgen.h>
+#include <limits.h>
 
 pthread_mutex_t buz_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t seg_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -27,13 +29,37 @@ typedef struct {
     struct epoll_event *events_list;
 } server_t;
 
-#define SERVER_WORKDIR "/home/jambaek/fortest"
-#define MAX_SIZES        256
-#define EVENT_SIZES      20
-#define SERVER_PORT      60000
-#define BACKLOG          10
-#define TEMP_ADC_SCALE   10.17f
-#define CDS_THRESHOLD    205
+#define MAX_SIZES       256
+#define EVENT_SIZES     20
+#define SERVER_PORT     60000
+#define BACKLOG         10
+#define TEMP_ADC_SCALE  10.17f
+#define CDS_THRESHOLD   205
+
+char lib_path[PATH_MAX];
+
+int getLibDir()
+{
+    char exe_path[PATH_MAX];
+
+    ssize_t len = readlink("/proc/self/exe", exe_path, sizeof(exe_path) - 1);
+
+    if(len != -1)
+    {
+        exe_path[len] = '\0';
+
+        char* dir = dirname(exe_path);
+
+        // 여기에 원하는 대로 라이브러리의 위치를 지정합니다.
+        sprintf(lib_path, "%s/", dir);
+
+        return 0;
+    }
+    else
+    {
+        return -1;
+    }
+}
 
 void daemonize(void)
 {
@@ -73,7 +99,7 @@ void daemonize(void)
         exit(1);
     }
 
-    if (chdir(SERVER_WORKDIR) < 0) {
+    if (chdir("/") < 0) {
         perror("chdir");
         exit(1);
     }
@@ -125,10 +151,12 @@ void* load_lib(const char* path, const char** func_names, void** func_ptrs, int 
 
 void* led_thread(void* arg)
 {
+    char temp_lib[PATH_MAX + 20];
     void* led_ptrs[3];
     const char* led_funcs[] = {"led_init", "led_on_off", "led_brightness"};
 
-    void* led_lib = load_lib("./libled.so", led_funcs, led_ptrs, 3);
+    sprintf(temp_lib,"%slibled.so",lib_path);
+    void* led_lib = load_lib(temp_lib, led_funcs, led_ptrs, 3);
     if (!led_lib) {
         free(arg);
         return NULL;
@@ -154,10 +182,12 @@ void* led_thread(void* arg)
 
 void* buzzer_thread(void* arg)
 {
+    char temp_lib[PATH_MAX + 20];
     void* buz_ptrs[3];
     const char* buz_funcs[] = {"buzzer_init", "buzzer_on", "buzzer_off"};
 
-    void* buz_lib = load_lib("./libbuzzer.so", buz_funcs, buz_ptrs, 3);
+    sprintf(temp_lib,"%slibbuzzer.so",lib_path);
+    void* buz_lib = load_lib(temp_lib, buz_funcs, buz_ptrs, 3);
     if (!buz_lib) {
         free(arg);
         return NULL;
@@ -200,10 +230,12 @@ void* buzzer_thread(void* arg)
 
 void* cds_thread(void* arg)
 {
+    char temp_lib[PATH_MAX + 20];
     void* cds_ptrs[2];
     const char* cds_funcs[] = {"cds_init", "cds_read"};
 
-    void* cds_lib = load_lib("./libcds.so", cds_funcs, cds_ptrs, 2);
+    sprintf(temp_lib,"%slibcds.so",lib_path);
+    void* cds_lib = load_lib(temp_lib, cds_funcs, cds_ptrs, 2);
     if (!cds_lib) {
         free(arg);
         return NULL;
@@ -258,11 +290,12 @@ void* seg_thread(void* arg)
         free(arg);
         return NULL;
     }
-
+    char temp_lib[PATH_MAX + 20];
     void* seg_ptrs[2];
     const char* seg_funcs[] = {"seg_init", "seg_display"};
 
-    void* seg_lib = load_lib("./libseg.so", seg_funcs, seg_ptrs, 2);
+    sprintf(temp_lib,"%slibseg.so",lib_path);
+    void* seg_lib = load_lib(temp_lib, seg_funcs, seg_ptrs, 2);
     if (!seg_lib) {
         free(arg);
         pthread_mutex_unlock(&seg_mutex);
@@ -310,10 +343,12 @@ void* seg_thread(void* arg)
 
 void* temp_thread(void* arg)
 {
+    char lib_temp[PATH_MAX + 20];
     void* temp_ptrs[2];
     const char* temp_funcs[] = {"temp_init", "temp_read"};
 
-    void* temp_lib = load_lib("./libtemp.so", temp_funcs, temp_ptrs, 2);
+    sprintf(lib_temp,"%slibtemp.so",lib_path);
+    void* temp_lib = load_lib(lib_temp, temp_funcs, temp_ptrs, 2);
     if (!temp_lib) {
         free(arg);
         return NULL;
@@ -566,6 +601,7 @@ int main(void)
 {
     server_t server;
 
+    getLibDir();
     daemonize();
     server_init(&server);
     run_server(&server);
