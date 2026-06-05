@@ -130,6 +130,12 @@ Raspberry Pi 4와 Ubuntu(UTM)를 활용하여 TCP 소켓 통신 기반의 원격
 - fork() 후 부모 프로세스를 종료하고 setsid()로 새 세션을 생성하여 제어 터미널과 분리합니다.
 - 작업 디렉토리를 변경하고 표준 입출력을 /dev/null로 리다이렉션합니다.
 - syslog로 서버 동작 및 에러 로그를 기록합니다. (추가기능)
+```bash
+2026-06-05T12:43:23.735601+09:00 jambaek-desktop device_server[31788]: device server daemon started
+2026-06-05T12:43:23.736167+09:00 jambaek-desktop device_server[31788]: server initialized: port=60000
+2026-06-05T12:43:27.343127+09:00 jambaek-desktop device_server[31788]: client connected: ip=100.89.181.97, fd=7
+2026-06-05T12:43:34.237638+09:00 jambaek-desktop device_server[31788]: client disconnected: fd=7
+```
 
 ### 실행 경로 자동 감지
 - 데몬화 시 작업 디렉토리가 변경되어도 라이브러리를 정상 로딩하도록 실행 파일 경로를 자동 감지합니다.
@@ -138,7 +144,7 @@ Raspberry Pi 4와 Ubuntu(UTM)를 활용하여 TCP 소켓 통신 기반의 원격
 
 ### 클라이언트 시그널 처리
 - SIGINT(Ctrl+C)만 핸들러로 처리하여 소켓을 닫고 정상 종료합니다.
-- SIGQUIT, SIGTSTP, SIGPIPE, SIGTERM은 무시하여 실행 도중 강제 종료되지 않도록 했습니다.
+- 다른 시그널은 무시하여 실행 도중 강제 종료되지 않도록 했습니다.
 
 
 
